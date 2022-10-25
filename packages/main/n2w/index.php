@@ -11,13 +11,13 @@ function main(array $args): array
     $number = (int)($args['number']);
     $words = (new NumberToWords)->toWords($number);
 
-    // return [
-    //     'body' => $words,
-    // ];
-
     return [
-        'body' => "testr",
+        'body' => $words,
     ];
+
+    // return [
+    //     'body' => "testr",
+    // ];
 }
 
 function wrap(array $args): array
