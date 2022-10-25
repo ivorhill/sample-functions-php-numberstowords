@@ -5,7 +5,7 @@ functions:
 - github:
     branch: master
     deploy_on_push: true
-    repo: digitalocean/sample-functions-php-numberstowords
+    repo: ivorhill/sample-functions-php-numberstowords
   name: numbertowords-api
   routes:
   - path: /
