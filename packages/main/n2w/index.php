@@ -2,7 +2,6 @@
 
 function main(array $args): array
 {
-    $id = $args['id'];
 
     $data = ["payload" => ["parcel" => [
         ["title" => "Parcel ID", "value" => "027370-0080", "columnno" => 1, "classNameTitle" => "lg-title"],
