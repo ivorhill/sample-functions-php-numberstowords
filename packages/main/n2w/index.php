@@ -10,8 +10,8 @@ function main(array $args): array
 
     $id = addHyphenToID($id);
 
-    $odataServiceUrl = env('WA_KING_ODATA_SERVICEURL');
-    $subKey = env('WA_KING_ODATA_SERVICESUBKEY');
+    $odataServiceUrl = getenv('WA_KING_ODATA_SERVICEURL');
+    $subKey = getenv('WA_KING_ODATA_SERVICESUBKEY');
 
     $odataClient = getODataClient($odataServiceUrl, $subKey);
 
@@ -55,7 +55,7 @@ function addHyphenToID($id)
 function getODataClient(string $odataServiceUrl, string $subscriptionKey)
 {
 
-    $odataServiceUrl = env('WA_KING_ODATA_SERVICEURL');      // 'https://services.odata.org/V4/TripPinService';
+    $odataServiceUrl = getenv('WA_KING_ODATA_SERVICEURL');      // 'https://services.odata.org/V4/TripPinService';
     // https://api-test.kingcounty.gov/ptas-uat-odataservices/v1.0/API
     $odataClient = new ODataClient($odataServiceUrl);
 
@@ -98,7 +98,7 @@ function getPermitTableDetails($permits)
 
 function getToken(): array
 {
-    $TenantID = env('WA_KING_ODATA_TENANTID');
+    $TenantID = getenv('WA_KING_ODATA_TENANTID');
     $base_url = 'https://login.microsoftonline.com/' . $TenantID . '/oauth2/token';
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $base_url);
@@ -106,9 +106,9 @@ function getToken(): array
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_POSTFIELDS, array(
-        'client_id' => env('WA_KING_ODATA_CLIENTID'),
-        'client_secret' => env('WA_KING_ODATA_CLIENTSECRET'),
-        'resource' => env('WA_KING_ODATA_CLIENTRESOURCE'),
+        'client_id' => getenv('WA_KING_ODATA_CLIENTID'),
+        'client_secret' => getenv('WA_KING_ODATA_CLIENTSECRET'),
+        'resource' => getenv('WA_KING_ODATA_CLIENTRESOURCE'),
         'grant_type' => 'client_credentials'
     ));
     $data = curl_exec($ch);
