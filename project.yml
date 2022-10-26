@@ -1,0 +1,6 @@
+packages:
+  - name: main
+    actions:
+      - n2w
+        environment:
+          NAME: "${NAME}"
