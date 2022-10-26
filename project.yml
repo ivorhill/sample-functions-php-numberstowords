@@ -4,5 +4,5 @@ packages:
       - name: n2w
         limits:
           timeout: 5000
-          memory: 512
+          memory: 1024
         
