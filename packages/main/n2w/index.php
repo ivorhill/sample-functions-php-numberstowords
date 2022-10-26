@@ -16,7 +16,7 @@ function main(array $args): array
     // ];
 
     return [
-        'body' => ${NAME},
+        'body' => env('NAME'),
     ];
 }
 
