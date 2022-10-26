@@ -1,121 +1,30 @@
 <?php
 
-
-use SaintSystems\OData\ODataClient;
-
 function main(array $args): array
 {
     $id = $args['id'];
-    $parcelInfo = null;
 
-    $id = addHyphenToID($id);
+    $data = ["payload" => ["parcel" => [
+        ["title" => "Parcel ID", "value" => "027370-0080", "columnno" => 1, "classNameTitle" => "lg-title"],
+        ["title" => "Jurisdiction", "value" => "KENT", "columnno" => 2, "classNameTitle" => "lg-title"],
+        ["title" => "Name", "value" => "IH3 PROPERTY BORROWER LP", "columnno" => 2, "classNameTitle" => "lg-title"],
+        ["title" => "Levy Code", "value" => "_", "columnno" => 2, "classNameTitle" => "lg-title"],
+        ["title" => "Address", "value" => "730 MAPLEWOOD AVE KENT 98030", "columnno" => 1, "classNameTitle" => "lg-title"],
+        ["title" => "Property Type", "value" => "R (Deprecated Field)", "columnno" => 2, "classNameTitle" => "lg-title"],
+        ["title" => "Residential Area", "value" => "Southwest", "columnno" => 1, "classNameTitle" => "lg-title"],
+        ["title" => "Plat Block / Building #", "value" => "2", "columnno" => 2, "classNameTitle" => "lg-title"],
+        ["title" => "Property Name", "value" => "_", "columnno" => 1, "classNameTitle" => "lg-title"],
+        ["title" => "Plat Lot", "value" => "7", "columnno" => 2, "classNameTitle" => "lg-title"],
+        ["title" => "Quarter-Section-Township-Range", "value" => "SE-19-22-05", "columnno" => 1, "classNameTitle" => "lg-title"],
+        ["title" => "Legal Description", "value" => "ARMSCREST # 2 LESS S 13.5 FT", "columnno" => 1, "classNameTitle" => "lg-title"]
+    ]]];
 
-    $odataServiceUrl = getenv('WA_KING_ODATA_SERVICEURL');
-    $subKey = getenv('WA_KING_ODATA_SERVICESUBKEY');
+    $delay = rand(200, 1000);
+    usleep($delay * 1000);
 
-    $odataClient = getODataClient($odataServiceUrl, $subKey);
-
-    $permits = $odataClient
-        ->from('PtasParceldetail') // problem
-        ->where('PtasName', '=', $id)
-        ->select('PtasParceldetailid')->expand(
-            [
-                'PtasPermitPtasParcelidValueNavigation($select=PtasPermittype,PtasIssueddate,PtasRevieweddate,PtasName,PtasLinktopermit,PtasDescription,PtasPermitvalue;$orderby=PtasIssueddate desc)',
-            ]
-        )
-        ->get();
-
-    foreach ($permits as $key => $value) {
-        $permit = $value->PtasPermitPtasParcelidValueNavigation;
-        $parcelInfo["permits"] = getPermitTableDetails($permit);
-    }
-
-    $payload = [
-        "permits" => $parcelInfo["permits"],
-    ];
-
-    return ["body" => $payload];
-    // return json_encode($payload);
+    return ["body" => json_encode($data)];
 }
 
-function addHyphenToID($id)
-{
-    $separator = '-';
-    $length = 6;
-
-    if (strpos($id, $separator, $length))
-        return $id;
-    if (strlen($id) > $length) {
-        $id = str_split($id, $length);
-        return implode($separator, $id);
-    }
-    return null;
-}
-
-function getODataClient(string $odataServiceUrl, string $subscriptionKey)
-{
-
-    $odataServiceUrl = getenv('WA_KING_ODATA_SERVICEURL');      // 'https://services.odata.org/V4/TripPinService';
-    // https://api-test.kingcounty.gov/ptas-uat-odataservices/v1.0/API
-    $odataClient = new ODataClient($odataServiceUrl);
-
-    // var_dump($odataClient);
-    // die();
-
-    $odataClient = new ODataClient($odataServiceUrl, function ($request) use (&$subscriptionKey) {
-        $token = getToken();
-        $accessToken = $token["token"];
-
-        // Might have to create these in main
-        $request->headers['Ocp-Apim-Subscription-Key'] = $subscriptionKey;
-        $request->headers['Authorization'] = 'Bearer ' . $accessToken;
-        // var_dump($request);
-        // die();
-    });
-
-    // var_dump($odataClient);
-    // die();
-
-    return $odataClient;
-}
-
-function getPermitTableDetails($permits)
-{
-    $permitDetail = array();
-    $permitDetail["headers"] = array((object)['title' => 'Permit Number', 'addlink' => false], 'Permit Description', 'Type', 'Issue Date', 'Value', 'Jurisdiction', 'Reviewed Date');
-    $permitDetail["body"] = array();
-    foreach ($permits as $key => $value) {
-        $issueDate = isset($value["PtasIssueddate"]) ? date("Y-m-d", strtotime($value["PtasIssueddate"])) : "-";
-        $reviewDate = isset($value["PtasRevieweddate"]) ? date("Y-m-d", strtotime($value["PtasRevieweddate"])) : "-";
-        array_push($permitDetail["body"], array((object)[
-            'data' => $value["PtasName"],
-            'url' => $value["PtasLinktopermit"],
-            'value' => $value["PtasName"],
-        ], $value["PtasDescription"], (string)$value["PtasPermittype"],  $issueDate, "$" . number_format($value["PtasPermitvalue"]), '-', $reviewDate));
-    }
-    return $permitDetail;
-}
-
-function getToken(): array
-{
-    $TenantID = getenv('WA_KING_ODATA_TENANTID');
-    $base_url = 'https://login.microsoftonline.com/' . $TenantID . '/oauth2/token';
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $base_url);
-    curl_setopt($ch, CURLOPT_POST, TRUE);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, array(
-        'client_id' => getenv('WA_KING_ODATA_CLIENTID'),
-        'client_secret' => getenv('WA_KING_ODATA_CLIENTSECRET'),
-        'resource' => getenv('WA_KING_ODATA_CLIENTRESOURCE'),
-        'grant_type' => 'client_credentials'
-    ));
-    $data = curl_exec($ch);
-    $auth_string = json_decode($data, true);
-    //Cache::put('token', $auth_string["access_token"], 2400);
-    return array('token' => $auth_string["access_token"], 'expires_on' => $auth_string["expires_on"]);
-}
 
 
 
